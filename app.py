@@ -6,11 +6,9 @@ from sentence_transformers import SentenceTransformer, util
 # Load Data
 # ==============================
 @st.cache_data
+@st.cache_data
 def load_data():
-    # Example dataset: replace with your CSV path
-    data = pd.read_csv('C:\\Users\\user\\Documents\\UN_Countries_QA_History.csv')
-
-    return pd.DataFrame(data)
+    return pd.read_csv("UN_Countries_QA_History.csv")
 
 df = load_data()
 
@@ -58,4 +56,5 @@ if user_input:
 
     st.markdown(f"**Answer:** {df['Answer'].iloc[best_idx]}")
     st.caption(f"Confidence: {confidence:.2f}")
+
 
