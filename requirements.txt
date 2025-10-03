@@ -2,3 +2,5 @@ pip>=25.0
 streamlit
 scikit-learn
 pandas
+sentence-transformers
+torch
