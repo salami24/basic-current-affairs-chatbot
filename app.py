@@ -1,33 +1,45 @@
 import streamlit as st
-import pickle
-from sklearn.metrics.pairwise import cosine_similarity
+import pandas as pd
+from sentence_transformers import SentenceTransformer, util
 
-# Load model and dataset
-with open("currentaffairs_chatbot_vectorizer.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
+# ==============================
+# Load Data
+# ==============================
+@st.cache_data
+def load_data():
+    # Example dataset: replace with your CSV path
+    data = pd.read_csv('C:\\Users\\user\\Documents\\UN_Countries_QA_History.csv')
 
-with open("chatbot_dataset.pkl", "rb") as f:
-    df = pickle.load(f)
+    return pd.DataFrame(data)
 
-# Rebuild embeddings
-X_vectors = vectorizer.transform(df["Question"])
+df = load_data()
 
-# Chatbot function
-def chatbot_response(user_input):
-    user_vec = vectorizer.transform([user_input])
-    similarities = cosine_similarity(user_vec, X_vectors)
-    idx = similarities.argmax()
-    return df.iloc[idx]["Answer"]
+# ==============================
+# Load Model
+# ==============================
+@st.cache_resource
+def load_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
+model = load_model()
+
+# Precompute embeddings for dataset
+corpus_embeddings = model.encode(df["Question"], convert_to_tensor=True)
+
+
+# ==============================
 # Streamlit UI
-st.set_page_config(page_title="🌍 UN Countries Chatbot", page_icon="🌍")
+# ==============================
+st.title("🧠 Current Affairs Chatbot")
+st.write("Ask me any question from united nation countries!")
 
-st.title("🌍 UN Countries Chatbot")
-st.write("Ask me about any UN member state and I’ll tell you the basic info.")
-
-# User input box
-user_input = st.text_input("You:", "")
+user_input = st.text_input("Your question:")
 
 if user_input:
-    response = chatbot_response(user_input)
-    st.success(f"🤖 {response}")
+    query_embedding = model.encode(user_input, convert_to_tensor=True)
+    scores = util.cos_sim(query_embedding, corpus_embeddings)
+    best_idx = scores.argmax().item()
+    confidence = scores[0][best_idx].item()
+
+    st.markdown(f"**Answer:** {df['Answer'].iloc[best_idx]}")
+    st.caption(f"Confidence: {confidence:.2f}")
