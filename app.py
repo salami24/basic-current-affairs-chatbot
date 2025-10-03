@@ -23,6 +23,21 @@ def load_model():
 
 model = load_model()
 
+# Option to upload a new CSV
+uploaded_file = st.file_uploader("Upload a new Q&A CSV", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success("✅ Custom dataset uploaded!")
+else:
+    df = load_data()
+
+# Validate dataset
+if not {"question", "answer"}.issubset(df.columns):
+    st.error("CSV must have 'question' and 'answer' columns.")
+    st.stop()
+
+
 # Precompute embeddings for dataset
 corpus_embeddings = model.encode(df["Question"], convert_to_tensor=True)
 
@@ -43,3 +58,4 @@ if user_input:
 
     st.markdown(f"**Answer:** {df['Answer'].iloc[best_idx]}")
     st.caption(f"Confidence: {confidence:.2f}")
+
